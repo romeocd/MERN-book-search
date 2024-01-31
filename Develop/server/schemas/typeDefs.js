@@ -41,3 +41,5 @@ const typeDefs = `
         removeBook(bookId: String!): User
     }
 `;
+
+module.exports = typeDefs; 
