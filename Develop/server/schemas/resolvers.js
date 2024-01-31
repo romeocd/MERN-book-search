@@ -20,5 +20,17 @@ const resolvers = {
             return foundUser;
         },
     },
-    
+    Mutation: {
+        //Resolver for creating a user
+        createUser: async (_, args) => {
+            const user = await User.create(args);
+
+            if (!user) {
+                throw new Error('Something is wrong');
+            }
+
+            const token = signToken(user);
+            return { token, user };
+        },
+    }
 }
