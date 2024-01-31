@@ -10,7 +10,7 @@ const SignupForm = () => {
   // set initial form state
   const [userFormData, setUserFormData] = useState({ username: '', email: '', password: '' });
   // set state for form validation
-  const [validated] = useState(false);
+  const [validated, setValidated] = useState(false);
   // set state for alert
   const [showAlert, setShowAlert] = useState(false);
 
@@ -34,26 +34,27 @@ const SignupForm = () => {
 
     // check if form has everything (as per react-bootstrap docs)
     const form = event.currentTarget;
-    if (form.checkValidity() === false) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
+    const isFormValid = form.checkValidity();
 
-    try {
-      await addUser({
-        variables: { ...userFormData }
-      });
-    } catch (err) {
-      console.error(err);
-    }
+  // Set the validated state to true to trigger feedback display
+  setValidated(true);
 
-    setUserFormData({
-      username: '',
-      email: '',
-      password: '',
-    });
-  };
+  if (!isFormValid) {
+    event.stopPropagation();
+    return;
+  }
 
+  await addUser({
+    variables: { ...userFormData }
+  });
+
+    // Reset form fields only on successful signup, if needed
+  setUserFormData({
+    username: '',
+    email: '',
+    password: '',
+  });
+};
   return (
     <>
       {/* This is needed for the validation functionality above */}
