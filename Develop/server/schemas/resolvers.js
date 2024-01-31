@@ -69,6 +69,25 @@ const resolvers = {
             return updatedUser;
         },
 
-        
-    }
-}
+        //Resolver for deleting a book
+        deleteBook: async (_, { bookId }, context) => {
+            if (!context.user) {
+                throw new Error('Not Authenticated');
+            }
+
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: context.user._id },
+                { $pull: { savedBooks: { bookId} } },
+                { new: true }
+            );
+
+            if (!updatedUser) {
+                throw new Error("Can't find user with this Id")
+            }
+
+            return updatedUser;
+        },
+    },
+};
+
+module.exports = resolvers;
