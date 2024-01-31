@@ -50,6 +50,25 @@ const resolvers = {
             const token = signToken(user);
             return { token, user };
         },
+
+        //Resolver for saving a book
+        saveBook: async (_, { bookData }, context) => {
+            if (!context.user) {
+                throw new Error('Not Authenticated');
+            }
+
+            const updatedUser = await User.findOneandUpdate(
+                { _id: context.user._id },
+                { $addToSet: { savedBooks: bookData } },
+                { new: true, runValidators: true }
+            );
+
+            if (!updatedUser) {
+                throw new Error('Error saving Book');
+            }
+            return updatedUser;
+        },
+
         
     }
 }
