@@ -1,5 +1,7 @@
 const express = require('express');
 const { ApolloServer } = require('@apollo/server');
+const { expressMiddleware } = require('@apollo/server/express4');
+
 const path = require('path');
 const db = require('./config/connection');
 
@@ -30,8 +32,13 @@ app.use(express.json());
 const startApolloServer = async () => {
   await server.start();
 
-  // Apply Apollo Server middleware
-  server.applyMiddleware({ app });
+  app.use(express.urlencoded({ extended: false }));
+  app.use(express.json());
+
+  app.use('/graphql', expressMiddleware(server, {
+    context: authMiddleware
+  }));
+
 
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/build')));
