@@ -7,7 +7,7 @@ const db = require('./config/connection');
 const { typeDefs, resolvers } = require('./schemas');
 
 // Import the updated authMiddleware
-const { authMiddleware } = require('./middleware/auth');
+const { authMiddleware } = require('./utils/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
