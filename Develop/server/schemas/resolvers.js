@@ -32,5 +32,24 @@ const resolvers = {
             const token = signToken(user);
             return { token, user };
         },
+
+        //Resolver for logging in a user
+        login: async(_, { username, email, password }) => {
+            const user = await User.findOne({ $or: [{ username }, { email }]  });
+
+            if (!user) {
+                throw new Error('Cannot find user');
+            }
+
+            const correctPw = await user.isCorrectPassword(passowrd);
+
+            if (!correctPw) {
+                throw new Error('Wrong password!');
+            }
+
+            const token = signToken(user);
+            return { token, user };
+        },
+        
     }
 }
