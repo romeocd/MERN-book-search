@@ -4,12 +4,15 @@ import {
   InMemoryCache, 
   ApolloProvider, 
   createHttpLink } from '@apollo/client';
-import { Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import SearchBooks from './pages/SearchBooks';
+import SavedBooks from './pages/SavedBooks';
+
 import Navbar from './components/Navbar';
 import { setContext } from '@apollo/client/link/context';
 
 const httpLink = createHttpLink( {
-  uri: 'http://localhost:3001/graphql',
+  uri: '/graphql',
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -30,10 +33,17 @@ const client = new ApolloClient({
 function App() {
   return (
     <ApolloProvider client={client}>
-      <Navbar />
-      <Outlet />
+      <Router>
+        <>
+        <Navbar />
+        <Switch>
+          <Route exact path="/" component={SearchBooks} />
+            <Route exact path="/saved" component={SavedBooks} />
+            <Route render={() => <h1 className="display-2">Wrong page!</h1>} />
+        </Switch>
+        </>
+      </Router>
     </ApolloProvider>
   );
 }
-
 export default App;
