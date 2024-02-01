@@ -1,111 +1,67 @@
-const { User } = require('../models');
-const { signToken } = require('../utils/auth');
+const { AuthenticationError } = require("apollo-server-express");
+const { User } = require("../models");
+const { signToken } = require("../utils/auth");
 
 const resolvers = {
-    Query: {
-        //Resolver for getting a single user
-        getSingleUser: async (_, args, context) => {
-            if (!context.user) {
-                throw new Error('Not authenticated');
-            }
-
-            const foundUser = await User.findOne({
-                $or: [{ _id: context.user ? context.user._id : args.id }, {username: args.username }],
-            });
-
-            if (!foundUser) {
-                throw new Error('Cannot find user with this Id');
-            }
-
-            return foundUser;
-        },
+  Query: {
+    me: async (parent, args, context) => {
+      // check if users exist
+      if (context.user) {
+        const userData = await User.findOne({ _id: context.user._id }).select(
+          "-__v -password"
+        );
+        return userData;
+      }
+      throw new AuthenticationError("Not logged in");
     },
-    Mutation: {
-        //Resolver for creating a user
-        addUser: async (_, args) => {
-            try {
-                const user = await User.create(args);
-        
-                // Assuming User.create returns null if user can't be created
-                // which is uncommon. Usually, it throws an error.
-                if (!user) {
-                    throw new Error('User creation failed');
-                }
-        
-                const token = signToken(user);
-                return { token, user };
-            } catch (error) {
-                // Log the detailed error for debugging purposes
-                console.error("Error in createUser resolver:", error);
-        
-                // Throw a more user-friendly error message
-                // or handle specific known error cases (like duplicate email)
-                if (error.code === 11000) {
-                    // Handle duplicate key error (e.g., email already exists)
-                    throw new Error('User with this email already exists');
-                } else {
-                    // For other errors, you can send a generic message
-                    // or based on the environment, send detailed messages
-                    throw new Error('Error creating user');
-                }
-            }
-        },
+  },
 
-        //Resolver for logging in a user
-        login: async(_, { username, email, password }) => {
-            const user = await User.findOne({ $or: [{ username }, { email }]  });
+  Mutation: {
+    login: async (parent, { email, password }) => {
+      const user = await User.findOne({ email });
+      // check if user exists with email and credentials
+      if (!user) {
+        throw new AuthenticationError("Incorrect credentials");
+      }
+      const correctPassword = await user.isCorrectPassword(password);
 
-            if (!user) {
-                throw new Error('Cannot find user');
-            }
+      // check password
+      if (!correctPassword) {
+        throw new AuthenticationError("Incorrect credentials");
+      }
 
-            const correctPw = await user.isCorrectPassword(password);
-
-            if (!correctPw) {
-                throw new Error('Wrong password!');
-            }
-
-            const token = signToken(user);
-            return { token, user };
-        },
-
-        //Resolver for saving a book
-        saveBook: async (_, { bookData }, context) => {
-            if (!context.user) {
-                throw new Error('Not Authenticated');
-            }
-
-            const updatedUser = await User.findOneandUpdate(
-                { _id: context.user._id },
-                { $addToSet: { savedBooks: bookData } },
-                { new: true, runValidators: true }
-            );
-
-            if (!updatedUser) {
-                throw new Error('Error saving Book');
-            }
-            return updatedUser;
-        },
-
-        //Resolver for deleting a book
-        removeBook: async (_, { bookId }, context) => {
-            if (!context.user) {
-                throw new Error('Not Authenticated');
-            }
-
-            const updatedUser = await User.findOneAndUpdate(
-                { _id: context.user._id },
-                { $pull: { savedBooks: { bookId} } },
-                { new: true }
-            );
-
-            if (!updatedUser) {
-                throw new Error("Can't find user with this Id")
-            }
-
-            return updatedUser;
-        },
+      const token = signToken(user);
+      return { token, user };
     },
+    addUser: async (parent, args) => {
+      const user = await User.create(args);
+      const token = signToken(user);
+
+      return { token, user };
+    },
+    saveBook: async (parent, { input }, context) => {
+      if (context.user) {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $addToSet: { savedBooks: input } },
+          { new: true, runValidators: true }
+        );
+        return updatedUser;
+      }
+      throw new AuthenticationError("You need to be logged in!");
+    },
+    removeBook: async (parent, { bookId }, context) => {
+      if (context.user) {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $pull: { savedBooks: { bookId: bookId } } },
+          { new: true }
+        );
+        return updatedUser;
+      }
+      throw new AuthenticationError("You need to be logged in!");
+    },
+  },
 };
 
 module.exports = resolvers;
