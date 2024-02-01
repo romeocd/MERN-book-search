@@ -23,14 +23,32 @@ const resolvers = {
     Mutation: {
         //Resolver for creating a user
         addUser: async (_, args) => {
-            const user = await User.create(args);
-
-            if (!user) {
-                throw new Error('Something is wrong');
+            try {
+                const user = await User.create(args);
+        
+                // Assuming User.create returns null if user can't be created
+                // which is uncommon. Usually, it throws an error.
+                if (!user) {
+                    throw new Error('User creation failed');
+                }
+        
+                const token = signToken(user);
+                return { token, user };
+            } catch (error) {
+                // Log the detailed error for debugging purposes
+                console.error("Error in createUser resolver:", error);
+        
+                // Throw a more user-friendly error message
+                // or handle specific known error cases (like duplicate email)
+                if (error.code === 11000) {
+                    // Handle duplicate key error (e.g., email already exists)
+                    throw new Error('User with this email already exists');
+                } else {
+                    // For other errors, you can send a generic message
+                    // or based on the environment, send detailed messages
+                    throw new Error('Error creating user');
+                }
             }
-
-            const token = signToken(user);
-            return { token, user };
         },
 
         //Resolver for logging in a user
@@ -41,7 +59,7 @@ const resolvers = {
                 throw new Error('Cannot find user');
             }
 
-            const correctPw = await user.isCorrectPassword(passowrd);
+            const correctPw = await user.isCorrectPassword(password);
 
             if (!correctPw) {
                 throw new Error('Wrong password!');
