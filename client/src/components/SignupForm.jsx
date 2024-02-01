@@ -16,15 +16,16 @@ const SignupForm = () => {
   //addUser mutation hook
   const [addUser] = useMutation(ADD_USER, {
     onCompleted: (data) => {
-      Auth.login(data.addUser.token);
-      // Any additional success logic
+        Auth.login(data.addUser.token);
     },
     onError: (error) => {
-      console.error('GraphQL Error:', error);
-      setShowAlert(true);
-      // Any additional error logic
+        console.error('GraphQL Error:', error);
+        setShowAlert(true);
+        // More detailed error logging
+        if (error.graphQLErrors) error.graphQLErrors.forEach(err => console.error('GraphQLError:', err));
+        if (error.networkError) console.error('NetworkError:', error.networkError);
     }
-  });
+});
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
