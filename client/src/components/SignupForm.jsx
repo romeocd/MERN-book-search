@@ -14,7 +14,17 @@ const SignupForm = () => {
   const [showAlert, setShowAlert] = useState(false);
 
   //addUser mutation hook
-  const [addUser] = useMutation(ADD_USER);
+  const [addUser] = useMutation(ADD_USER, {
+    onCompleted: (data) => {
+      Auth.login(data.addUser.token);
+      // Any additional success logic
+    },
+    onError: (error) => {
+      console.error('GraphQL Error:', error);
+      setShowAlert(true);
+      // Any additional error logic
+    }
+  });
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -35,16 +45,11 @@ const SignupForm = () => {
     try {
       const { data } = await addUser({ variables: { ...userFormData } });
       Auth.login(data.addUser.token);
+      setUserFormData({ username: '', email: '', password: '' }); // Reset form on success
     } catch (err) {
-      console.error(err);
+      console.error('Signup error:', err);
       setShowAlert(true);
     }
-
-    setUserFormData({
-      username: '',
-      email: '',
-      password: '',
-    });
   };
 
   return (
