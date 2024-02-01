@@ -19,7 +19,9 @@ const SignupForm = () => {
       Auth.login(data.addUser.token);
     },
     onError: (error) => {
-      console.error(error);
+      console.error('Error on mutation', error);
+      console.error('GraphQLErrors', error.graphQLErrors);
+      console.error('NetworkError', error.networkError);
       setShowAlert(true);
     }
   });
