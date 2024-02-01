@@ -22,7 +22,7 @@ const resolvers = {
     },
     Mutation: {
         //Resolver for creating a user
-        createUser: async (_, args) => {
+        addUser: async (_, args) => {
             const user = await User.create(args);
 
             if (!user) {
@@ -70,7 +70,7 @@ const resolvers = {
         },
 
         //Resolver for deleting a book
-        deleteBook: async (_, { bookId }, context) => {
+        removeBook: async (_, { bookId }, context) => {
             if (!context.user) {
                 throw new Error('Not Authenticated');
             }
