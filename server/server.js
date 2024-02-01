@@ -13,16 +13,9 @@ const { authMiddleware } = require('./utils/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// Set up Apollo Server
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: async ({ req }) => {
-    // Use the authMiddleware to add user info to the context
-    const user = await authMiddleware({ req });
-    return { user };
-  }
 });
 
 app.use(express.urlencoded({ extended: true }));
